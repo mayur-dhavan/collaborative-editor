@@ -2,7 +2,7 @@ import { WebSocket } from "ws"
 import { IncomingMessage } from "http"
 import jwt from "jsonwebtoken"
 // @ts-ignore
-import { setupWSConnection } from "y-websocket/bin/utils.js"
+import { setupWSConnection } from "y-websocket/bin/utils"
 import { Role } from "@/lib/types"
 
 const RATE_LIMIT_WINDOW = 60_000 // 1 minute

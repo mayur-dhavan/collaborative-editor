@@ -1,6 +1,6 @@
 import * as Y from "yjs"
 // @ts-ignore
-import { setPersistence } from "y-websocket/bin/utils.js"
+import { setPersistence } from "y-websocket/bin/utils"
 
 // Configure persistence for y-websocket
 export function setupPersistence() {

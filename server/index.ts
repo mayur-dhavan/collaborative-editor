@@ -3,7 +3,7 @@ import { WebSocketServer, WebSocket } from "ws"
 import { handleConnection } from "./ws-handler"
 import { setupPersistence } from "./rooms"
 // @ts-ignore
-import { docs } from "y-websocket/bin/utils.js"
+import { docs } from "y-websocket/bin/utils"
 
 // Initialize persistence integration with y-websocket
 setupPersistence()
