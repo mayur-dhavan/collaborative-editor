@@ -1,0 +1,48 @@
+databases:
+  - name: collab-db
+    plan: free
+    databaseName: collaborative_editor
+    user: collab_user
+
+services:
+  - type: web
+    name: collab-editor
+    plan: free
+    runtime: node
+    buildCommand: npm install --legacy-peer-deps && npx prisma generate && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: collab-db
+          property: connectionString
+      - key: NEXTAUTH_SECRET
+        generateValue: true
+      - key: NEXTAUTH_URL
+        sync: false
+      - key: NEXT_PUBLIC_WS_URL
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: WS_SERVER_SECRET
+        generateValue: true
+
+  - type: web
+    name: collab-ws-server
+    plan: free
+    runtime: node
+    buildCommand: npm install --legacy-peer-deps && npx prisma generate
+    startCommand: npm run start:ws
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: collab-db
+          property: connectionString
+      - key: NEXTAUTH_SECRET
+        sync: false
+      - key: NEXT_PUBLIC_APP_URL
+        sync: false
+      - key: WS_SERVER_SECRET
+        sync: false
+      - key: WS_PORT
+        value: "10000"
