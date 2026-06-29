@@ -40,6 +40,7 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
   const [showHistory, setShowHistory] = useState(false)
   const [showAI, setShowAI] = useState(false)
   const [userRole, setUserRole] = useState<string>("VIEWER")
+  const [wsToken, setWsToken] = useState<string | null>(null)
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -50,8 +51,21 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
   useEffect(() => {
     if (status === "authenticated") {
       fetchDocument()
+      fetchWsToken()
     }
   }, [status, id])
+
+  async function fetchWsToken() {
+    try {
+      const res = await fetch("/api/auth/ws-token")
+      if (res.ok) {
+        const data = await res.json()
+        setWsToken(data.token)
+      }
+    } catch (e) {
+      console.error("Failed to fetch WS token")
+    }
+  }
 
   async function fetchDocument() {
     const res = await fetch(`/api/documents/${id}`)
@@ -79,7 +93,7 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
     })
   }
 
-  if (status === "loading" || !document || !session) {
+  if (status === "loading" || !document || !session || !wsToken) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -129,7 +143,7 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
             documentId={id}
             userId={session.user.id}
             userName={session.user.name || "Anonymous"}
-            token={session.user.id}
+            token={wsToken}
             readOnly={userRole === "VIEWER"}
           />
         </main>
