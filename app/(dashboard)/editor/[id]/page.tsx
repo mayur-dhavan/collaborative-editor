@@ -16,7 +16,7 @@ const DocumentEditor = dynamic(
     ssr: false,
     loading: () => (
       <div className="flex items-center justify-center h-96">
-        <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        <div className="h-5 w-5 border-2 border-foreground border-t-transparent rounded-full animate-spin" />
       </div>
     ),
   }
@@ -62,12 +62,11 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
         const data = await res.json()
         setWsToken(data.token)
       } else {
-        // If fetch fails but we're online, token might be invalid
         setWsToken("offline-token")
       }
     } catch (e) {
       console.warn("Offline: Failed to fetch WS token. Proceeding to offline mode.")
-      setWsToken("offline-token") // Allow editor to boot in offline mode
+      setWsToken("offline-token")
     }
   }
 
@@ -78,7 +77,7 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
         const doc = await res.json()
         setDocument(doc)
         setTitle(doc.title)
-        
+
         let role = "VIEWER"
         if (doc.ownerId === session?.user?.id) {
           role = "OWNER"
@@ -87,8 +86,6 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
           role = access?.role || "VIEWER"
         }
         setUserRole(role)
-        
-        // Cache metadata for offline use
         localStorage.setItem(`doc-meta-${id}`, JSON.stringify({ doc, role }))
       } else {
         router.push("/documents")
@@ -102,7 +99,6 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
         setTitle(doc.title)
         setUserRole(role)
       } else {
-        // If no cache, we have to redirect as we don't even have basic metadata
         router.push("/documents")
       }
     }
@@ -120,17 +116,22 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
   if (status === "loading" || !document || !session || !wsToken) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        <div className="h-5 w-5 border-2 border-foreground border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <header className="border-b bg-background sticky top-0 z-20">
-        <div className="flex items-center justify-between px-4 py-2">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => router.push("/documents")}>
+      <header className="border-b sticky top-0 z-20 bg-background">
+        <div className="flex items-center justify-between px-4 py-2.5 max-w-full">
+          <div className="flex items-center gap-2 min-w-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.push("/documents")}
+              aria-label="Back to documents"
+            >
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <input
@@ -138,22 +139,35 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               onBlur={(e) => updateTitle(e.target.value)}
-              className="text-lg font-semibold bg-transparent border-none outline-none focus:ring-0 w-auto"
+              className="text-sm font-medium bg-transparent border-none outline-none focus:ring-0 min-w-0 truncate max-w-xs sm:max-w-sm md:max-w-md"
               disabled={userRole === "VIEWER"}
+              aria-label="Document title"
             />
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={() => setShowAI(!showAI)}>
-              <Sparkles className="h-4 w-4 mr-1" />
-              AI
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { setShowAI(!showAI); setShowHistory(false) }}
+              aria-pressed={showAI}
+              className={showAI ? "bg-accent" : ""}
+            >
+              <Sparkles className="h-4 w-4 mr-1.5" />
+              <span className="hidden sm:inline">AI</span>
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => setShowHistory(!showHistory)}>
-              <History className="h-4 w-4 mr-1" />
-              History
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { setShowHistory(!showHistory); setShowAI(false) }}
+              aria-pressed={showHistory}
+              className={showHistory ? "bg-accent" : ""}
+            >
+              <History className="h-4 w-4 mr-1.5" />
+              <span className="hidden sm:inline">History</span>
             </Button>
             {userRole === "OWNER" && (
               <Button variant="outline" size="sm" onClick={() => setShowShare(true)}>
-                <Share2 className="h-4 w-4 mr-1" />
+                <Share2 className="h-4 w-4 mr-1.5" />
                 Share
               </Button>
             )}
@@ -173,13 +187,13 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
         </main>
 
         {showHistory && (
-          <aside className="w-80 border-l overflow-y-auto bg-background">
+          <aside className="w-72 border-l overflow-y-auto bg-background shrink-0">
             <VersionHistory documentId={id} onClose={() => setShowHistory(false)} />
           </aside>
         )}
 
         {showAI && (
-          <aside className="w-80 border-l overflow-y-auto bg-background">
+          <aside className="w-72 border-l overflow-y-auto bg-background shrink-0">
             <AISidebar documentId={id} onClose={() => setShowAI(false)} />
           </aside>
         )}

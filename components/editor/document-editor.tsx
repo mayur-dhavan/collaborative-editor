@@ -149,7 +149,7 @@ export function DocumentEditor({
     return (
       <div className="flex items-center justify-center h-96">
         <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <div className="h-5 w-5 border-2 border-foreground border-t-transparent rounded-full animate-spin" />
           <p className="text-sm text-muted-foreground">Loading document...</p>
         </div>
       </div>

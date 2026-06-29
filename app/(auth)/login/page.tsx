@@ -7,8 +7,6 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { FileText } from "lucide-react"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -37,60 +35,61 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-2">
-            <div className="h-12 w-12 rounded-lg bg-primary flex items-center justify-center">
-              <FileText className="h-6 w-6 text-primary-foreground" />
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4">
+      <div className="w-full max-w-sm">
+        <div className="mb-8">
+          <Link href="/" className="text-base font-semibold tracking-tight">
+            CollabEdit
+          </Link>
+        </div>
+
+        <h1 className="text-2xl font-bold tracking-tight">Sign in</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Enter your credentials to continue.
+        </p>
+
+        <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+          {error && (
+            <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md border border-destructive/20">
+              {error}
             </div>
+          )}
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+            />
           </div>
-          <CardTitle className="text-2xl">Welcome back</CardTitle>
-          <CardDescription>Sign in to your collaborative editor</CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            {error && (
-              <div className="p-3 text-sm text-red-600 bg-red-50 dark:bg-red-950/50 rounded-md">
-                {error}
-              </div>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Signing in..." : "Sign in"}
-            </Button>
-            <p className="text-sm text-muted-foreground text-center">
-              Don&apos;t have an account?{" "}
-              <Link href="/register" className="text-primary hover:underline font-medium">
-                Sign up
-              </Link>
-            </p>
-          </CardFooter>
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              placeholder="Your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              autoComplete="current-password"
+            />
+          </div>
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? "Signing in..." : "Sign in"}
+          </Button>
         </form>
-      </Card>
+
+        <p className="mt-6 text-sm text-muted-foreground">
+          No account?{" "}
+          <Link href="/register" className="text-foreground hover:underline font-medium">
+            Create one
+          </Link>
+        </p>
+      </div>
     </div>
   )
 }

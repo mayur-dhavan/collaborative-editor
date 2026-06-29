@@ -73,7 +73,7 @@ export function VersionHistory({ documentId, onClose }: VersionHistoryProps) {
         <div className="p-4 space-y-3">
           {loading ? (
             <div className="flex justify-center py-8">
-              <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              <div className="h-5 w-5 border-2 border-foreground border-t-transparent rounded-full animate-spin" />
             </div>
           ) : versions.length === 0 ? (
             <div className="text-center py-8">

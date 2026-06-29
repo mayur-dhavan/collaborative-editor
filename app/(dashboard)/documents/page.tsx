@@ -4,9 +4,8 @@ import { useEffect, useState } from "react"
 import { useSession, signOut } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Plus, FileText, Users, Trash2, Clock, LogOut } from "lucide-react"
+import { Plus, FileText, Trash2, LogOut, Clock } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 
 interface Document {
@@ -50,7 +49,7 @@ export default function DocumentsPage() {
     const res = await fetch("/api/documents", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: "Untitled Document" }),
+      body: JSON.stringify({ title: "Untitled" }),
     })
     if (res.ok) {
       const doc = await res.json()
@@ -60,8 +59,7 @@ export default function DocumentsPage() {
 
   async function deleteDocument(id: string, e: React.MouseEvent) {
     e.stopPropagation()
-    if (!confirm("Are you sure you want to delete this document?")) return
-
+    if (!confirm("Delete this document?")) return
     const res = await fetch(`/api/documents/${id}`, { method: "DELETE" })
     if (res.ok) {
       setDocuments((docs) => docs.filter((d) => d.id !== id))
@@ -71,98 +69,90 @@ export default function DocumentsPage() {
   if (status === "loading" || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        <div className="h-5 w-5 border-2 border-foreground border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded bg-primary flex items-center justify-center">
-              <FileText className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <h1 className="text-xl font-semibold tracking-tight hidden sm:block">CollabEdit</h1>
-          </div>
-          <div className="flex items-center gap-2 sm:gap-4">
-            <span className="text-sm font-medium text-muted-foreground hidden sm:block">{session?.user?.name}</span>
-            <Button variant="ghost" size="icon" title="Log out" onClick={() => signOut({ callbackUrl: "/login" })}>
+      <header className="border-b">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+          <span className="text-base font-semibold tracking-tight">CollabEdit</span>
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-muted-foreground hidden sm:block">
+              {session?.user?.name}
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => signOut({ callbackUrl: "/login" })}
+              aria-label="Sign out"
+            >
               <LogOut className="h-4 w-4" />
-            </Button>
-            <Button onClick={createDocument}>
-              <Plus className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:block">New Document</span>
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+      <main className="flex-1 max-w-6xl mx-auto w-full px-6 py-10">
         <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Your Documents</h2>
+          <h1 className="text-2xl font-bold tracking-tight">Documents</h1>
+          <Button onClick={createDocument} size="sm">
+            <Plus className="h-4 w-4 mr-1" />
+            New document
+          </Button>
         </div>
 
         {documents.length === 0 ? (
-          <div className="text-center py-20 rounded-xl border bg-card">
-            <div className="h-16 w-16 rounded-xl bg-muted flex items-center justify-center mx-auto mb-6">
-              <FileText className="h-8 w-8 text-muted-foreground" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">No documents yet</h3>
-            <p className="text-muted-foreground mb-8 max-w-sm mx-auto">Create your first document to start collaborating with your team.</p>
-            <Button onClick={createDocument} size="lg">
-              <Plus className="h-5 w-5 mr-2" />
-              Create Document
+          <div className="border rounded-lg p-16 text-center">
+            <FileText className="h-8 w-8 text-muted-foreground mx-auto mb-4" />
+            <p className="text-sm font-medium mb-1">No documents yet</p>
+            <p className="text-sm text-muted-foreground mb-6">
+              Create your first document to get started.
+            </p>
+            <Button onClick={createDocument} size="sm">
+              <Plus className="h-4 w-4 mr-1" />
+              New document
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="border rounded-lg divide-y">
             {documents.map((doc) => (
-              <Card
+              <div
                 key={doc.id}
-                className="cursor-pointer group hover:shadow-md transition-shadow"
+                className="flex items-center justify-between px-4 py-3.5 hover:bg-muted/50 cursor-pointer group transition-colors"
                 onClick={() => router.push(`/editor/${doc.id}`)}
               >
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <CardTitle className="text-lg font-semibold line-clamp-1 group-hover:text-primary transition-colors">{doc.title}</CardTitle>
-                    {doc.ownerId === session?.user?.id && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 -mt-1 -mr-2 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
-                        onClick={(e) => deleteDocument(doc.id, e)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
+                <div className="flex items-center gap-3 min-w-0">
+                  <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{doc.title || "Untitled"}</p>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                      <Clock className="h-3 w-3" />
+                      {formatDistanceToNow(new Date(doc.updatedAt), { addSuffix: true })}
+                    </p>
                   </div>
-                  <CardDescription className="flex items-center gap-1.5 mt-1">
-                    <Clock className="h-3.5 w-3.5" />
-                    {formatDistanceToNow(new Date(doc.updatedAt), { addSuffix: true })}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between mt-2">
-                    <div className="flex items-center gap-1.5">
-                      <div className="flex -space-x-2">
-                        <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center border border-background">
-                          <Users className="h-3 w-3 text-muted-foreground" />
-                        </div>
-                      </div>
-                      <span className="text-xs font-medium text-muted-foreground ml-1">
-                        {doc.access.length + 1}
-                      </span>
-                    </div>
-                    <Badge variant={doc.ownerId === session?.user?.id ? "default" : "secondary"}>
-                      {doc.ownerId === session?.user?.id
-                        ? "Owner"
-                        : doc.access.find((a) => a.user.id === session?.user?.id)?.role || "Viewer"}
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Badge variant={doc.ownerId === session?.user?.id ? "default" : "secondary"} className="text-xs hidden sm:flex">
+                    {doc.ownerId === session?.user?.id
+                      ? "Owner"
+                      : doc.access.find((a) => a.user.id === session?.user?.id)?.role || "Viewer"}
+                  </Badge>
+                  {doc.ownerId === session?.user?.id && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity hover:text-destructive"
+                      onClick={(e) => deleteDocument(doc.id, e)}
+                      aria-label="Delete document"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                </div>
+              </div>
             ))}
           </div>
         )}
