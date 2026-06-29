@@ -78,7 +78,7 @@ export function DocumentEditor({
       Highlight.configure({ multicolor: true }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Placeholder.configure({ placeholder: "Start writing your document..." }),
-      Collaboration.configure({ fragment }),
+      Collaboration.configure({ document: ydoc, field: "document" }),
       CollaborationCursor.configure({
         provider: ws,
         user: { name: userName, color: getUserColor(userId) },
