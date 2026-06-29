@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  OWNER
+  EDITOR
+  VIEWER
+}
+
+model User {
+  id           String           @id @default(cuid())
+  email        String           @unique
+  name         String
+  passwordHash String
+  avatar       String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  documents    Document[]       @relation("OwnedDocuments")
+  access       DocumentAccess[]
+  versions     DocumentVersion[]
+  syncLogs     SyncLog[]
+
+  @@map("users")
+}
+
+model Document {
+  id        String           @id @default(cuid())
+  title     String           @default("Untitled Document")
+  yjsState  Bytes?
+  ownerId   String
+  owner     User             @relation("OwnedDocuments", fields: [ownerId], references: [id], onDelete: Cascade)
+  access    DocumentAccess[]
+  versions  DocumentVersion[]
+  syncLogs  SyncLog[]
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@index([ownerId])
+  @@map("documents")
+}
+
+model DocumentAccess {
+  id         String   @id @default(cuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role       Role
+  createdAt  DateTime @default(now())
+
+  @@unique([documentId, userId])
+  @@index([userId])
+  @@map("document_access")
+}
+
+model DocumentVersion {
+  id          String   @id @default(cuid())
+  documentId  String
+  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  yjsSnapshot Bytes
+  stateVector Bytes?
+  label       String?
+  createdBy   String
+  creator     User     @relation(fields: [createdBy], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@index([documentId, createdAt])
+  @@map("document_versions")
+}
+
+model SyncLog {
+  id         String   @id @default(cuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  updateSize Int
+  action     String
+  createdAt  DateTime @default(now())
+
+  @@index([documentId, createdAt])
+  @@index([userId, createdAt])
+  @@map("sync_logs")
+}
