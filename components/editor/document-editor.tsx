@@ -60,6 +60,7 @@ export function DocumentEditor({
       extensions: [
         StarterKit.configure({
           undoRedo: false,
+          underline: false,
         }),
         Underline,
         Highlight.configure({ multicolor: true }),

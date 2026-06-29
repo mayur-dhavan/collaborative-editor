@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator"
 import {
   Bold,
   Italic,
-  Underline,
+  Underline as UnderlineIcon,
   Strikethrough,
   Code,
   Heading1,
@@ -15,8 +15,6 @@ import {
   List,
   ListOrdered,
   Quote,
-  Undo2,
-  Redo2,
   AlignLeft,
   AlignCenter,
   AlignRight,
@@ -46,7 +44,7 @@ export function EditorToolbar({ editor, readOnly }: EditorToolbarProps) {
       title: "Italic",
     },
     {
-      icon: Underline,
+      icon: UnderlineIcon,
       action: () => editor.chain().focus().toggleUnderline().run(),
       active: editor.isActive("underline"),
       title: "Underline",
@@ -193,27 +191,6 @@ export function EditorToolbar({ editor, readOnly }: EditorToolbarProps) {
           <Icon className="h-4 w-4" />
         </Button>
       ))}
-      <Separator orientation="vertical" className="mx-1 h-6" />
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8"
-        onClick={() => editor.chain().focus().undo().run()}
-        disabled={!editor.can().undo()}
-        title="Undo"
-      >
-        <Undo2 className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8"
-        onClick={() => editor.chain().focus().redo().run()}
-        disabled={!editor.can().redo()}
-        title="Redo"
-      >
-        <Redo2 className="h-4 w-4" />
-      </Button>
     </div>
   )
 }
