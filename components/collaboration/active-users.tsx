@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+// @ts-ignore
 import { WebsocketProvider } from "y-websocket"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"

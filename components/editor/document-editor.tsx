@@ -12,6 +12,7 @@ import Highlight from "@tiptap/extension-highlight"
 import TextAlign from "@tiptap/extension-text-align"
 import * as Y from "yjs"
 import { IndexeddbPersistence } from "y-indexeddb"
+// @ts-ignore
 import { WebsocketProvider } from "y-websocket"
 import { SyncStateManager, SyncStatus } from "@/lib/crdt/sync-engine"
 import { useSyncState } from "@/hooks/use-sync-state"
