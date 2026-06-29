@@ -20,7 +20,10 @@ const httpServer = createServer((req, res) => {
   res.end()
 })
 
-const wss = new WebSocketServer({ server: httpServer })
+const wss = new WebSocketServer({ 
+  server: httpServer,
+  maxPayload: 1048576 // 1MB payload limit to prevent OOM
+})
 
 wss.on("connection", (ws: WebSocket, req) => {
   handleConnection(ws, req)

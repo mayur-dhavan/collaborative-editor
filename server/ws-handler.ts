@@ -79,6 +79,38 @@ export async function handleConnection(ws: WebSocket, req: IncomingMessage): Pro
     // If we can't verify, allow with editor role (development mode)
   }
 
+  // If the user is a VIEWER, we must enforce read-only at the network layer.
+  // We do this by intercepting incoming messages before y-websocket processes them.
+  if (userRole === Role.VIEWER) {
+    const originalOn = ws.on.bind(ws)
+    ws.on = (event: string, listener: (...args: any[]) => void) => {
+      if (event === "message") {
+        const wrappedListener = (message: Uint8Array | Buffer, isBinary: boolean) => {
+          try {
+            // message[0] === 0 means MessageSync
+            // message[1] is the sync message type: 0 = SyncStep1, 1 = SyncStep2, 2 = SyncUpdate
+            if (message && message.length > 1 && message[0] === 0) {
+              const syncType = message[1]
+              // Viewers are allowed to send SyncStep1 (to request the document state)
+              // But they are strictly forbidden from sending SyncStep2 or SyncUpdate
+              if (syncType === 1 || syncType === 2) {
+                // Drop the packet silently (prevent OOM or state corruption)
+                return
+              }
+            }
+          } catch (e) {
+            // If we fail to parse, drop to be safe
+            return
+          }
+          // Pass safe messages (like Awareness or SyncStep1) to y-websocket
+          return listener(message, isBinary)
+        }
+        return originalOn(event, wrappedListener as any)
+      }
+      return originalOn(event, listener)
+    }
+  }
+
   // Pass the connection to y-websocket. 
   // setupWSConnection handles the binary sync protocol properly!
   setupWSConnection(ws, req, { docName: documentId })

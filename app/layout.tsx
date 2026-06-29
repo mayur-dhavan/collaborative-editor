@@ -30,7 +30,22 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
-        <Providers>{children}</Providers>
+        <Providers>
+          <div className="flex-1 flex flex-col min-h-screen">
+            {children}
+            <footer className="py-6 border-t mt-auto">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <p className="text-sm text-muted-foreground">
+                  © 2026 CollabEdit by Mayur Dhavan
+                </p>
+                <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                  <a href="https://github.com/mayur-dhavan" target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">GitHub</a>
+                  <a href="https://www.linkedin.com/in/mayur-dhavan/" target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">LinkedIn</a>
+                </div>
+              </div>
+            </footer>
+          </div>
+        </Providers>
       </body>
     </html>
   );

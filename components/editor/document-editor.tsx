@@ -20,6 +20,8 @@ import { getUserColor } from "@/lib/crdt/ydoc-manager"
 import { EditorToolbar } from "./toolbar"
 import { ConnectionStatus } from "@/components/collaboration/connection-status"
 import { ActiveUsers } from "@/components/collaboration/active-users"
+import { Button } from "@/components/ui/button"
+import { Camera } from "lucide-react"
 
 interface DocumentEditorProps {
   documentId: string
@@ -38,8 +40,10 @@ export function DocumentEditor({
 }: DocumentEditorProps) {
   const [editor, setEditor] = useState<Editor | null>(null)
   const [provider, setProvider] = useState<WebsocketProvider | null>(null)
+  const [ydoc, setYdoc] = useState<Y.Doc | null>(null)
   const [syncManager] = useState(() => new SyncStateManager())
   const syncStatus = useSyncState(syncManager)
+  const [isSaving, setIsSaving] = useState(false)
 
   // Single ref to track cleanup — prevents double-init in React 18 Strict Mode
   const cleanupRef = useRef<(() => void) | null>(null)
@@ -51,13 +55,14 @@ export function DocumentEditor({
       cleanupRef.current = null
     }
 
-    const ydoc = new Y.Doc()
-    const fragment = ydoc.getXmlFragment("document")
-
-    const persistence = new IndexeddbPersistence(`doc-${documentId}`, ydoc)
+    const newYdoc = new Y.Doc()
+    setYdoc(newYdoc)
+    const fragment = newYdoc.getXmlFragment("document")
+    
+    const persistence = new IndexeddbPersistence(`doc-${documentId}`, newYdoc)
 
     const wsUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:4000"
-    const ws = new WebsocketProvider(wsUrl, documentId, ydoc, {
+    const ws = new WebsocketProvider(wsUrl, documentId, newYdoc, {
       params: { token, userId },
     })
 
@@ -79,7 +84,7 @@ export function DocumentEditor({
       Highlight.configure({ multicolor: true }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Placeholder.configure({ placeholder: "Start writing your document..." }),
-      Collaboration.configure({ document: ydoc, field: "document" }),
+      Collaboration.configure({ document: newYdoc, field: "document" }),
       CollaborationCaret.configure({
         provider: ws,
         user: { name: userName, color: getUserColor(userId) },
@@ -105,7 +110,7 @@ export function DocumentEditor({
       tiptapEditor.destroy()
       ws.destroy()
       persistence.destroy()
-      ydoc.destroy()
+      newYdoc.destroy()
       setEditor(null)
       setProvider(null)
     }
@@ -117,6 +122,28 @@ export function DocumentEditor({
       }
     }
   }, [documentId])
+
+  async function saveVersion() {
+    if (!ydoc) return
+    setIsSaving(true)
+    try {
+      const update = Y.encodeStateAsUpdate(ydoc)
+      const snapshot = Buffer.from(update).toString("base64")
+      
+      const res = await fetch(`/api/documents/${documentId}/versions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ snapshot })
+      })
+      
+      if (!res.ok) throw new Error("Failed to save")
+      alert("Snapshot saved successfully!")
+    } catch (e) {
+      alert("Error saving snapshot")
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   if (!editor) {
     return (
@@ -136,6 +163,16 @@ export function DocumentEditor({
           <EditorToolbar editor={editor} readOnly={readOnly} />
         </div>
         <div className="flex items-center gap-3">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={saveVersion} 
+            disabled={isSaving || readOnly}
+            className="hidden sm:flex"
+          >
+            <Camera className="h-4 w-4 mr-1.5" />
+            {isSaving ? "Saving..." : "Save Snapshot"}
+          </Button>
           <ActiveUsers provider={provider} />
           <ConnectionStatus status={syncStatus} />
         </div>

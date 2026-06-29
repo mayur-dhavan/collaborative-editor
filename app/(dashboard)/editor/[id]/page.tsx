@@ -61,26 +61,50 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
       if (res.ok) {
         const data = await res.json()
         setWsToken(data.token)
+      } else {
+        // If fetch fails but we're online, token might be invalid
+        setWsToken("offline-token")
       }
     } catch (e) {
-      console.error("Failed to fetch WS token")
+      console.warn("Offline: Failed to fetch WS token. Proceeding to offline mode.")
+      setWsToken("offline-token") // Allow editor to boot in offline mode
     }
   }
 
   async function fetchDocument() {
-    const res = await fetch(`/api/documents/${id}`)
-    if (res.ok) {
-      const doc = await res.json()
-      setDocument(doc)
-      setTitle(doc.title)
-      if (doc.ownerId === session?.user?.id) {
-        setUserRole("OWNER")
+    try {
+      const res = await fetch(`/api/documents/${id}`)
+      if (res.ok) {
+        const doc = await res.json()
+        setDocument(doc)
+        setTitle(doc.title)
+        
+        let role = "VIEWER"
+        if (doc.ownerId === session?.user?.id) {
+          role = "OWNER"
+        } else {
+          const access = doc.access.find((a: { user: { id: string } }) => a.user.id === session?.user?.id)
+          role = access?.role || "VIEWER"
+        }
+        setUserRole(role)
+        
+        // Cache metadata for offline use
+        localStorage.setItem(`doc-meta-${id}`, JSON.stringify({ doc, role }))
       } else {
-        const access = doc.access.find((a: { user: { id: string } }) => a.user.id === session?.user?.id)
-        setUserRole(access?.role || "VIEWER")
+        router.push("/documents")
       }
-    } else {
-      router.push("/documents")
+    } catch (e) {
+      console.warn("Offline: Failed to fetch document. Loading from local cache.")
+      const cached = localStorage.getItem(`doc-meta-${id}`)
+      if (cached) {
+        const { doc, role } = JSON.parse(cached)
+        setDocument(doc)
+        setTitle(doc.title)
+        setUserRole(role)
+      } else {
+        // If no cache, we have to redirect as we don't even have basic metadata
+        router.push("/documents")
+      }
     }
   }
 
