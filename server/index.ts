@@ -2,6 +2,8 @@ import { createServer } from "http"
 import { WebSocketServer, WebSocket } from "ws"
 import { handleConnection } from "./ws-handler"
 import { setupPersistence } from "./rooms"
+// @ts-ignore
+import { docs } from "y-websocket/bin/utils.js"
 
 // Initialize persistence integration with y-websocket
 setupPersistence()
@@ -11,7 +13,7 @@ const PORT = parseInt(process.env.WS_PORT || "4000")
 const httpServer = createServer((req, res) => {
   if (req.url === "/health") {
     res.writeHead(200, { "Content-Type": "application/json" })
-    res.end(JSON.stringify({ status: "ok", rooms: rooms.size }))
+    res.end(JSON.stringify({ status: "ok", rooms: docs.size }))
     return
   }
   res.writeHead(404)
