@@ -1,5 +1,6 @@
 import * as Y from "yjs"
 import { IndexeddbPersistence } from "y-indexeddb"
+// @ts-ignore
 import { WebsocketProvider } from "y-websocket"
 import { SyncStateManager, SyncStatus } from "./sync-engine"
 
