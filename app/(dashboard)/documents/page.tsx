@@ -77,7 +77,6 @@ export default function DocumentsPage() {
   }
 
   return (
-  return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Background Glowing Orbs */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/20 blur-[120px] pointer-events-none" />
