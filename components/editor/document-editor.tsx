@@ -5,7 +5,7 @@ import { EditorContent } from "@tiptap/react"
 import { Editor } from "@tiptap/core"
 import StarterKit from "@tiptap/starter-kit"
 import Collaboration from "@tiptap/extension-collaboration"
-import CollaborationCursor from "@tiptap/extension-collaboration-cursor"
+import CollaborationCaret from "@tiptap/extension-collaboration-caret"
 import Placeholder from "@tiptap/extension-placeholder"
 import Underline from "@tiptap/extension-underline"
 import Highlight from "@tiptap/extension-highlight"
@@ -79,7 +79,7 @@ export function DocumentEditor({
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Placeholder.configure({ placeholder: "Start writing your document..." }),
       Collaboration.configure({ document: ydoc, field: "document" }),
-      CollaborationCursor.configure({
+      CollaborationCaret.configure({
         provider: ws,
         user: { name: userName, color: getUserColor(userId) },
       }),

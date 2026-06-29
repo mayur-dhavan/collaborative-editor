@@ -1,0 +1,6 @@
+const Y = require('yjs')
+const ydoc = new Y.Doc()
+const fragment = ydoc.getXmlFragment("document")
+console.log("fragment.doc is undefined?", fragment.doc === undefined)
+console.log("fragment.doc is null?", fragment.doc === null)
+console.log("fragment is:", fragment)

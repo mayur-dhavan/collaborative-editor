@@ -113,7 +113,7 @@
   pointer-events: none;
 }
 
-.tiptap .collaboration-cursor__caret {
+.tiptap .collaboration-carets__caret {
   border-left: 1px solid #0d0d0d;
   border-right: 1px solid #0d0d0d;
   margin-left: -1px;
@@ -123,7 +123,7 @@
   word-break: normal;
 }
 
-.tiptap .collaboration-cursor__label {
+.tiptap .collaboration-carets__label {
   border-radius: 3px 3px 3px 0;
   color: #fff;
   font-size: 12px;
