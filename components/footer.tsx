@@ -5,7 +5,7 @@ export function Footer() {
     <footer className="border-t bg-background mt-auto">
       <div className="max-w-6xl mx-auto px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
-          Built by <span className="font-medium text-foreground">Mayur D</span>
+          Built by <span className="font-medium text-foreground">Mayur Dhavan</span>
         </p>
         <div className="flex items-center gap-4">
           <a
