@@ -18,6 +18,7 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
+  AlignJustify,
   Highlighter,
   Minus,
 } from "lucide-react"
@@ -135,6 +136,12 @@ export function EditorToolbar({ editor, readOnly }: EditorToolbarProps) {
       action: () => editor.chain().focus().setTextAlign("right").run(),
       active: editor.isActive({ textAlign: "right" }),
       title: "Align Right",
+    },
+    {
+      icon: AlignJustify,
+      action: () => editor.chain().focus().setTextAlign("justify").run(),
+      active: editor.isActive({ textAlign: "justify" }),
+      title: "Align Justify",
     },
   ]
 
