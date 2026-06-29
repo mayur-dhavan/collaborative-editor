@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback, useMemo } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useEditor, EditorContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import Collaboration from "@tiptap/extension-collaboration"
@@ -12,8 +12,8 @@ import TextAlign from "@tiptap/extension-text-align"
 import * as Y from "yjs"
 import { IndexeddbPersistence } from "y-indexeddb"
 import { WebsocketProvider } from "y-websocket"
+import { SyncStateManager, SyncStatus } from "@/lib/crdt/sync-engine"
 import { useSyncState } from "@/hooks/use-sync-state"
-import { SyncStateManager } from "@/lib/crdt/sync-engine"
 import { getUserColor } from "@/lib/crdt/ydoc-manager"
 import { EditorToolbar } from "./toolbar"
 import { ConnectionStatus } from "@/components/collaboration/connection-status"
@@ -34,21 +34,29 @@ export function DocumentEditor({
   token,
   readOnly = false,
 }: DocumentEditorProps) {
-  const [ydoc, setYdoc] = useState<Y.Doc | null>(null)
-  const [provider, setProvider] = useState<WebsocketProvider | null>(null)
   const [syncManager] = useState(() => new SyncStateManager())
+  const [provider, setProvider] = useState<WebsocketProvider | null>(null)
   const [isReady, setIsReady] = useState(false)
   const syncStatus = useSyncState(syncManager)
 
+  const ydocRef = useRef<Y.Doc | null>(null)
+  const fragmentRef = useRef<Y.XmlFragment | null>(null)
+  const persistenceRef = useRef<IndexeddbPersistence | null>(null)
+  const providerRef = useRef<WebsocketProvider | null>(null)
+
   useEffect(() => {
-    const doc = new Y.Doc()
-    const persistence = new IndexeddbPersistence(`doc-${documentId}`, doc)
+    const ydoc = new Y.Doc()
+    ydocRef.current = ydoc
+    const fragment = ydoc.getXmlFragment("document")
+    fragmentRef.current = fragment
+
+    const persistence = new IndexeddbPersistence(`doc-${documentId}`, ydoc)
+    persistenceRef.current = persistence
 
     persistence.once("synced", () => {
-      setYdoc(doc)
-
       const wsUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:4000"
-      const ws = new WebsocketProvider(wsUrl, documentId, doc, {
+
+      const ws = new WebsocketProvider(wsUrl, documentId, ydoc, {
         params: { token, userId },
       })
 
@@ -63,18 +71,19 @@ export function DocumentEditor({
         else syncManager.setStatus("offline")
       })
 
+      providerRef.current = ws
       setProvider(ws)
       setIsReady(true)
     })
 
     return () => {
-      provider?.destroy()
-      persistence.destroy()
-      doc.destroy()
+      providerRef.current?.destroy()
+      persistenceRef.current?.destroy()
+      ydocRef.current?.destroy()
     }
   }, [documentId])
 
-  if (!isReady || !ydoc) {
+  if (!isReady || !fragmentRef.current) {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="flex flex-col items-center gap-3">
@@ -86,10 +95,9 @@ export function DocumentEditor({
   }
 
   return (
-    <EditorView
-      ydoc={ydoc}
+    <CollaborativeEditor
+      fragment={fragmentRef.current}
       provider={provider}
-      documentId={documentId}
       userId={userId}
       userName={userName}
       readOnly={readOnly}
@@ -98,27 +106,25 @@ export function DocumentEditor({
   )
 }
 
-interface EditorViewProps {
-  ydoc: Y.Doc
+interface CollaborativeEditorProps {
+  fragment: Y.XmlFragment
   provider: WebsocketProvider | null
-  documentId: string
   userId: string
   userName: string
   readOnly: boolean
-  syncStatus: string
+  syncStatus: SyncStatus
 }
 
-function EditorView({
-  ydoc,
+function CollaborativeEditor({
+  fragment,
   provider,
-  documentId,
   userId,
   userName,
   readOnly,
   syncStatus,
-}: EditorViewProps) {
-  const extensions = useMemo(() => {
-    const exts: any[] = [
+}: CollaborativeEditorProps) {
+  const editor = useEditor({
+    extensions: [
       StarterKit.configure({
         undoRedo: false,
         underline: false,
@@ -130,28 +136,20 @@ function EditorView({
         placeholder: "Start writing your document...",
       }),
       Collaboration.configure({
-        document: ydoc,
-        field: "document",
+        fragment,
       }),
-    ]
-
-    if (provider) {
-      exts.push(
-        CollaborationCursor.configure({
-          provider,
-          user: {
-            name: userName,
-            color: getUserColor(userId),
-          },
-        })
-      )
-    }
-
-    return exts
-  }, [ydoc, provider, userName, userId])
-
-  const editor = useEditor({
-    extensions,
+      ...(provider
+        ? [
+            CollaborationCursor.configure({
+              provider,
+              user: {
+                name: userName,
+                color: getUserColor(userId),
+              },
+            }),
+          ]
+        : []),
+    ],
     editable: !readOnly,
     editorProps: {
       attributes: {
@@ -169,7 +167,7 @@ function EditorView({
         </div>
         <div className="flex items-center gap-3">
           <ActiveUsers provider={provider} />
-          <ConnectionStatus status={syncStatus as any} />
+          <ConnectionStatus status={syncStatus} />
         </div>
       </div>
       <div className="flex-1 overflow-y-auto">
