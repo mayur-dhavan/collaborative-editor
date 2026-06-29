@@ -25,7 +25,7 @@ export function ActiveUsers({ provider }: ActiveUsersProps) {
 
     const updateUsers = () => {
       const states = new Map<number, UserState>()
-      awareness.getStates().forEach((state, clientId) => {
+      awareness.getStates().forEach((state: any, clientId: number) => {
         if (state.user && clientId !== awareness.clientID) {
           states.set(clientId, state.user as UserState)
         }
