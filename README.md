@@ -44,7 +44,7 @@ PostgreSQL
 
 ## Key Features
 
-- **Local-First**: Edit documents offline with zero network dependency. IndexedDB persists all changes.
+- **True Local-First Bootstrapping**: Edit documents completely offline. The Next.js UI falls back to `localStorage` metadata caching and `y-indexeddb` to instantly load the editor and persist changes with zero network dependency.
 - **Real-Time Collaboration**: Multiple users edit simultaneously with live cursors and presence indicators.
 - **Deterministic Conflict Resolution**: Yjs CRDT merges concurrent edits without data loss, regardless of network conditions.
 - **Version History**: Create snapshots, browse timeline, and safely restore previous versions without corrupting other collaborators' state.
@@ -106,15 +106,15 @@ Vercel and serverless platforms don't support persistent WebSocket connections. 
 ### How Version Restore Works Safely
 Restoring a version doesn't replace the document state. Instead, the target version's state is applied as a new CRDT update that flows through the normal sync channel — preserving other collaborators' cursors and pending edits.
 
-### Security: Preventing OOM Attacks
-- WebSocket messages are rejected if > 1MB
-- Rate limited to 100 updates/minute per client
-- Yjs updates are decoded in a try/catch to reject malformed payloads
-- All database queries are scoped to the authenticated user's permissions
+### Security: Preventing OOM Attacks & Privilege Escalation
+- **Payload Size Limit:** WebSocket messages are strictly rejected if > 1MB to prevent OOM attacks.
+- **Server-Side Read-Only Enforcement:** The WebSocket server actively intercepts binary `y-websocket` packets and drops `SyncStep2` and `SyncUpdate` messages from users with the Viewer role. This ensures malicious Viewers cannot bypass frontend restrictions to corrupt document state.
+- **Rate Limiting:** Connections are rate limited to 100 updates/minute per client.
+- **Strict ORM Scoping:** All database API queries are strictly scoped to the authenticated user's permissions via a robust `authorizeDocumentAccess` middleware.
 
 ## Project Structure
 
-```
+```text
 collaborative-editor/
 ├── app/                    # Next.js App Router pages and API routes
 ├── components/             # React components (editor, collaboration, UI)
@@ -128,5 +128,5 @@ collaborative-editor/
 ## Author
 
 **Mayur Dhavan**
-- GitHub: https://github.com/MayurDhavan
-- LinkedIn: https://linkedin.com/in/MayurDhavan
+- GitHub: [mayur-dhavan](https://github.com/mayur-dhavan)
+- LinkedIn: [mayur-dhavan](https://www.linkedin.com/in/mayur-dhavan/)
