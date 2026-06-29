@@ -1,7 +1,10 @@
 import { createServer } from "http"
 import { WebSocketServer, WebSocket } from "ws"
 import { handleConnection } from "./ws-handler"
-import { rooms } from "./rooms"
+import { setupPersistence } from "./rooms"
+
+// Initialize persistence integration with y-websocket
+setupPersistence()
 
 const PORT = parseInt(process.env.WS_PORT || "4000")
 
@@ -38,7 +41,6 @@ wss.on("close", () => {
 
 function gracefulShutdown() {
   console.log("Shutting down WebSocket server...")
-  rooms.forEach((room) => room.persistNow())
   wss.close(() => {
     httpServer.close(() => {
       process.exit(0)

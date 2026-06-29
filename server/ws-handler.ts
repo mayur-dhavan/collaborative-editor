@@ -1,10 +1,10 @@
-import { WebSocket, RawData } from "ws"
+import { WebSocket } from "ws"
 import { IncomingMessage } from "http"
 import jwt from "jsonwebtoken"
-import { getOrCreateRoom } from "./rooms"
+// @ts-ignore
+import { setupWSConnection } from "y-websocket/bin/utils.js"
 import { Role } from "@/lib/types"
 
-const MAX_UPDATE_SIZE = 1_048_576 // 1MB
 const RATE_LIMIT_WINDOW = 60_000 // 1 minute
 const RATE_LIMIT_MAX = 100 // max messages per window
 
@@ -79,53 +79,7 @@ export async function handleConnection(ws: WebSocket, req: IncomingMessage): Pro
     // If we can't verify, allow with editor role (development mode)
   }
 
-  const room = await getOrCreateRoom(documentId)
-  room.addConnection(ws, userId, userRole)
-
-  ;(ws as WebSocket & { isAlive: boolean }).isAlive = true
-  ws.on("pong", () => {
-    ;(ws as WebSocket & { isAlive: boolean }).isAlive = true
-  })
-
-  ws.on("message", (data: RawData) => {
-    const buffer = data instanceof ArrayBuffer
-      ? Buffer.from(data)
-      : Array.isArray(data)
-        ? Buffer.concat(data)
-        : data as Buffer
-
-    if (buffer.byteLength > MAX_UPDATE_SIZE) {
-      ws.send(JSON.stringify({ type: "error", message: "Payload too large" }))
-      return
-    }
-
-    if (!checkRateLimit(userId)) {
-      ws.send(JSON.stringify({ type: "error", message: "Rate limit exceeded" }))
-      return
-    }
-
-    const connection = room.getConnection(ws)
-    if (connection?.role === Role.VIEWER) {
-      // Viewers can receive awareness updates but not push document changes
-      // Allow awareness protocol messages (they start with specific bytes)
-      // Yjs awareness messages have a different structure than doc updates
-      return
-    }
-
-    try {
-      room.applyUpdate(new Uint8Array(buffer), ws)
-    } catch (error) {
-      console.error("Failed to apply update:", error)
-      ws.send(JSON.stringify({ type: "error", message: "Invalid update" }))
-    }
-  })
-
-  ws.on("close", () => {
-    room.removeConnection(ws)
-  })
-
-  ws.on("error", (error) => {
-    console.error("WebSocket error:", error)
-    room.removeConnection(ws)
-  })
+  // Pass the connection to y-websocket. 
+  // setupWSConnection handles the binary sync protocol properly!
+  setupWSConnection(ws, req, { docName: documentId })
 }
