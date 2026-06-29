@@ -105,6 +105,8 @@ export function DocumentEditor({
       ws.destroy()
       persistence.destroy()
       ydoc.destroy()
+      setEditor(null)
+      setProvider(null)
     }
 
     return () => {

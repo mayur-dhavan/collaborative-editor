@@ -1,12 +1,12 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useSession } from "next-auth/react"
+import { useSession, signOut } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Plus, FileText, Users, Trash2, Clock } from "lucide-react"
+import { Plus, FileText, Users, Trash2, Clock, LogOut } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 
 interface Document {
@@ -88,6 +88,9 @@ export default function DocumentsPage() {
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground">{session?.user?.name}</span>
+            <Button variant="ghost" size="icon" title="Log out" onClick={() => signOut({ callbackUrl: "/login" })}>
+              <LogOut className="h-4 w-4" />
+            </Button>
             <Button onClick={createDocument}>
               <Plus className="h-4 w-4 mr-2" />
               New Document
